@@ -1,0 +1,64 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: AWS Serverless Websocket Routes Sample - Websocket Stack
+
+Transform:
+  - AWS::Serverless-2016-10-31
+
+Parameters:
+  ApiId:
+    Type: String
+    Description: Api Id for routes
+  RouteKey:
+    Type: String
+    Description: Route key name
+  OperationName:
+    Type: String
+    Description: Operation name for route
+  IntegrationType:
+    Type: String
+    Description: Integration type for Route Integration 
+  FunctionArn:
+    Type: String
+    Description: Lambda Function Arn for Integration
+
+Conditions:
+  NeedIntegrationUri: !Equals [!Ref IntegrationType, "AWS_PROXY"]
+
+Resources:
+  Route:
+    Type: AWS::ApiGatewayV2::Route
+    Properties:
+      ApiKeyRequired: False
+      ApiId: !Ref ApiId
+      RouteKey: !Ref RouteKey
+      OperationName: !Ref OperationName
+      Target: !Join
+        - '/'
+        - - 'integrations'
+          - !Ref Integration
+
+  Integration:
+    Type: AWS::ApiGatewayV2::Integration
+    Properties:
+      ApiId: !Ref ApiId
+      IntegrationType: !Ref IntegrationType
+      IntegrationUri: 
+        Fn::If:
+          ["NeedIntegrationUri", !Sub "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${FunctionArn}/invocations", !Ref "AWS::NoValue"]
+      
+  IntegrationResponse:
+    Type: AWS::ApiGatewayV2::IntegrationResponse
+    Properties: 
+      ApiId: !Ref ApiId
+      ContentHandlingStrategy: CONVERT_TO_TEXT
+      IntegrationId: !Ref Integration
+      IntegrationResponseKey: /200/
+      
+  RouteResponse:
+    Type: AWS::ApiGatewayV2::RouteResponse
+    Properties: 
+      ApiId: !Ref ApiId                  
+      RouteId: !Ref Route
+      # Currently only $default RouteResponseKey is supported (02/Dec/2020)
+      # https://docs.aws.amazon.com/apigateway/latest/developerguide/apigateway-websocket-api-route-response.html      
+      RouteResponseKey: $default
