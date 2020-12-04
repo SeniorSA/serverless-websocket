@@ -108,7 +108,7 @@ Resources:
   WebSocketConnectFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: s3://websocketsampleapis3stack-websockettemplatebucket-18sdljcioxbls/3ac1aef1b08f822a9e79c6b25afe1f8f
+      CodeUri: s3://websocketsampleapis3stack-websockettemplatebucket-18sdljcioxbls/2f553877de0f7104e762712a589c9662
       Handler: websocket/connect.handler
       Runtime: python3.8
       MemorySize: 128
@@ -137,7 +137,7 @@ Resources:
   WebSocketDisconnectFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: s3://websocketsampleapis3stack-websockettemplatebucket-18sdljcioxbls/3ac1aef1b08f822a9e79c6b25afe1f8f
+      CodeUri: s3://websocketsampleapis3stack-websockettemplatebucket-18sdljcioxbls/2f553877de0f7104e762712a589c9662
       Handler: websocket/disconnect.handler
       Runtime: python3.8
       MemorySize: 128
@@ -178,7 +178,7 @@ Resources:
   WebSocketRegisterFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: s3://websocketsampleapis3stack-websockettemplatebucket-18sdljcioxbls/3ac1aef1b08f822a9e79c6b25afe1f8f
+      CodeUri: s3://websocketsampleapis3stack-websockettemplatebucket-18sdljcioxbls/2f553877de0f7104e762712a589c9662
       Handler: websocket/register.handler
       Runtime: python3.8
       MemorySize: 128
@@ -218,7 +218,7 @@ Resources:
   WebSocketMessageFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: s3://websocketsampleapis3stack-websockettemplatebucket-18sdljcioxbls/3ac1aef1b08f822a9e79c6b25afe1f8f
+      CodeUri: s3://websocketsampleapis3stack-websockettemplatebucket-18sdljcioxbls/2f553877de0f7104e762712a589c9662
       Handler: websocket/message.handler
       Runtime: python3.8
       MemorySize: 128
@@ -256,7 +256,7 @@ Resources:
   WebSocketListUsersFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: s3://websocketsampleapis3stack-websockettemplatebucket-18sdljcioxbls/3ac1aef1b08f822a9e79c6b25afe1f8f
+      CodeUri: s3://websocketsampleapis3stack-websockettemplatebucket-18sdljcioxbls/2f553877de0f7104e762712a589c9662
       Handler: websocket/list_users.handler
       Runtime: python3.8
       MemorySize: 128

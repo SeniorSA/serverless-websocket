@@ -2,23 +2,32 @@ import React from 'react';
 import logo from './logo.svg';
 import './App.css';
 import { TextField, Button } from '@material-ui/core';
+import WebChat from "./WebChat";
 
 class App extends React.Component {
 
   constructor(props) {
     super(props);
     this.state = {
-      username: localStorage.getItem('username') || ""
+      userName: "",
+      login: false
     };
   }
 
-  setUsername(username) {
-    localStorage.setItem('username', username);
-    this.setState(state => ({username: username}));
+  login() {
+    this.setState(state => ({userName: state.userName, login: true}));
   }
 
   renderChat() {
+    return <WebChat
+    userName={this.state.userName}
+    ></WebChat>
+  }
 
+  updateValue(event) {
+    this.setState(state => ({
+      userName: event.target.value, login: state.login
+    }));
   }
 
   renderInitialPage()  {
@@ -30,8 +39,8 @@ class App extends React.Component {
           Serverless Webchat
         </p>
         <div>
-          <TextField id="username" label="Apelido" variant="outlined"></TextField>
-          <Button variant="conained">Entrar</Button>
+          <TextField value={this.state.userName} onChange={evt => this.updateValue(evt)} id="userName" label="Apelido" variant="outlined"></TextField>
+          <Button onClick={() => this.login()} variant="contained">Entrar</Button>
         </div>
       </header>
     </div>
@@ -39,7 +48,7 @@ class App extends React.Component {
   }
 
   render() {
-    if (this.state.username) {
+    if (this.state.login) {
       return this.renderChat();
     } else {
       return this.renderInitialPage();

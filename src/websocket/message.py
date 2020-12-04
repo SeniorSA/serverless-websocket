@@ -15,7 +15,7 @@ def handler(event, context):
 
     
     for receiver in receivers:
-      apigateway_client.post_to_connection(ConnectionId=receiver['connectionId'], Data=json.dumps({'sender': sender, 'receiver': receiver, 'message': message}))
+      apigateway_client.post_to_connection(ConnectionId=receiver['connectionId'], Data=json.dumps({'action': 'message', 'sender': sender, 'receiver': receiver, 'message': message}))
     
     return {
       'statusCode': 200,
