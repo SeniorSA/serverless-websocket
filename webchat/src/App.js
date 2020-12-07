@@ -3,7 +3,7 @@ import logo from './logo.png';
 import senior from './senior.png'
 import github from './github.png';
 import './App.css';
-import { TextField, Button, Container, Grid, Icon } from '@material-ui/core';
+import { TextField, Button, Container, Grid } from '@material-ui/core';
 import WebChat from "./WebChat";
 
 class App extends React.Component {

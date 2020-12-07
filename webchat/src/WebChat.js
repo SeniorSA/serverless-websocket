@@ -40,18 +40,26 @@ class WebChat extends React.Component {
 
   onMessage(data) {
     this.setState(state => {
-      let messages = state.messages
-      if (!messages) {
+      let messages = "";
+      if (!state.messages) {
         messages = `${data.sender}: ${data.message}`;
       } else {
-        messages += `\n${data.sender}: ${data.message}`;
+        messages = state.messages + `\n${data.sender}: ${data.message}`;
       }
-      return {message: state.message, messages: messages}
+      return {message: state.message, messages: messages};
     });
   }
 
   sendMessage(text) {
-    this.setState(state => ({message: "", messages: state.messages}));
+    this.setState(state => {
+      let messages = "";
+      if (!state.messages) {
+        messages = `Você: ${text}`;
+      } else {
+        messages = state.messages + `\nVocê: ${text}`;
+      }
+      return {message: "", messages: messages};
+    });
     client.send(JSON.stringify({
       action: 'message', 
       sender: this.props.userName,
