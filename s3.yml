@@ -6,7 +6,7 @@ Transform:
 
 
 Resources:
-  
+  # Creates S3 Bucket for store SAM/CloudFormation templates
   WebsocketTemplateBucket:
     Type: AWS::S3::Bucket
     
