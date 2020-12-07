@@ -4,6 +4,7 @@ import os
 from lib.scan_table import scan
 
 def handler(event, context):
+  #Get the connection Id
   connectionId=event['requestContext'].get('connectionId')
 
   body = json.loads(event['body'])
@@ -11,6 +12,7 @@ def handler(event, context):
   if 'userName' in body:
     userName = body['userName']
     client = boto3.client('dynamodb')
+    # Updates the user record setting the userName in DynamoDB Table
     client.update_item(
       TableName=os.getenv('TABLE_NAME'),
       Key={'connectionId': {'S': connectionId}},
@@ -26,6 +28,7 @@ def handler(event, context):
 
     connections_list = scan(os.getenv('TABLE_NAME'))
 
+    # Notify all users connected that a new user is connected
     for connection in connections_list:
       if (connection['connectionId'] != connectionId):
         apigateway_client.post_to_connection(ConnectionId=connection['connectionId'], Data=json.dumps({'action': 'newUser', 'userName': userName, 'connectionId': connectionId}))

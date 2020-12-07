@@ -4,6 +4,7 @@ import os
 
 def handler(event, context):
   client = boto3.client('dynamodb')
+  # Register in DynamoDB table when a new user connects.
   client.put_item(
     TableName=os.getenv('TABLE_NAME'),
     Item={

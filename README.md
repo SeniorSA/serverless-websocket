@@ -30,6 +30,8 @@ O projeto está localizado na pasta `./webchat`.
 Ao acessar a aplicação, o usuário deve informar um nome de usuário e acessar o chat.
 As mensagens recebidas e enviadas serão listadas na parte principal da tela. Logo abaixo um campo para digitação de texto e um botão para envio estão disponibilizados.
 
+![Webchat](./Webchat.gif)
+
 ## Execução
 
 Faça clone deste repositório para sua máquina local.

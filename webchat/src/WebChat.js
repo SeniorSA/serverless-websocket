@@ -1,6 +1,6 @@
 import React from 'react';
 import { w3cwebsocket as W3CWebSocket } from 'websocket';
-import { Container, Grid, TextareaAutosize, TextField, Button, Icon } from '@material-ui/core';
+import { Container, Grid, Typography, TextField, Button } from '@material-ui/core';
 import { config } from './config';
 
 let client = null;
@@ -89,13 +89,18 @@ class WebChat extends React.Component {
       <Container maxWidth="lg">
         <Grid container spacing={3}>
           <Grid item xs={12}>
-            <TextareaAutosize styles={{width: "100%"}} value={this.state.messages} rowsMin={20} rowsMax={20} id="messages"></TextareaAutosize>
+            <Typography align="center" variant="body1">
+              Você está online como {this.props.userName}
+            </Typography>
           </Grid>
-          <Grid item xs={9}>
-            <TextField styles={{width: "100%"}} value={this.state.message} onChange={event => this.onWriteMessage(event)} id="text" placeholder="Digite sua mensagem aqui..." variant="outlined"></TextField>
+          <Grid item xs={12}>
+            <TextField autoFocus={false} multiline variant="outlined" fullWidth value={this.state.messages} rows={20} rowsMax={20} id="messages"></TextField>
           </Grid>
-          <Grid item xs={3}>
-            <Button onClick={() => this.sendMessage(this.state.message)} endIcon={<Icon>send</Icon>} variant="contained" color="primary"></Button>
+          <Grid item xs={10}>
+            <TextField fullWidth autoFocus={true} value={this.state.message} onChange={event => this.onWriteMessage(event)} id="text" placeholder="Digite sua mensagem aqui..." variant="outlined"></TextField>
+          </Grid>
+          <Grid item xs={2}>
+            <Button fullWidth size="large" disableElevation onClick={() => this.sendMessage(this.state.message)} variant="contained" color="primary">Enviar</Button>
           </Grid>
         </Grid>
       </Container>

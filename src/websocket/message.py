@@ -13,7 +13,7 @@ def handler(event, context):
     endpoint_api = os.getenv('WEBSOCKET_ADDRESS')   
     apigateway_client = boto3.client('apigatewaymanagementapi', endpoint_url=endpoint_api)
 
-    
+    # Send the "message" from "sender" to all users in variable "receivers"
     for receiver in receivers:
       apigateway_client.post_to_connection(ConnectionId=receiver['connectionId'], Data=json.dumps({'action': 'message', 'sender': sender, 'receiver': receiver, 'message': message}))
     
