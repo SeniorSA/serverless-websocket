@@ -1,0 +1,333 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: AWS Serverless Websocket Sample - Websocket Stack
+
+Transform:
+  - AWS::Serverless-2016-10-31
+
+Parameters:
+  # Parameter for receive SAM/CloudFormation stack name for DynamoDB (created with dynamodb.yml file)
+  WebSocketTableStackName:
+    Type: String
+    Description: Stack name from stack responsible for DynamoDB Table for Connection Ids
+
+Resources:
+  # Defines API Gateway Websocket
+  WebsocketAPI:
+    Type: AWS::ApiGatewayV2::Api
+    Properties:        
+      Name: !Sub ${AWS::StackName}-WebSocketAPI
+      ProtocolType: WEBSOCKET
+      RouteSelectionExpression: "$request.body.action"      
+      Version: 1.0.0      
+
+  # Defines the deploy of API
+  WebsocketAPIDeployment:
+    Type: AWS::ApiGatewayV2::Deployment
+    DependsOn:
+    - ConnectRoute
+    - DisconnectRoute
+    - RegisterRoute
+    - ListUsersRoute
+    - MessageRoute
+    Properties:
+      ApiId: !Ref WebsocketAPI
+
+  # Defines the stage "Prod" for deploy
+  WebsocketAPIStage:
+    Type: AWS::ApiGatewayV2::Stage
+    Properties:
+      ApiId: !Ref WebsocketAPI
+      AutoDeploy: True
+      StageName: Prod
+
+  # The next resources uses CloudFormation Nested Stack to reuse template's code
+  # The file websocket_route.yml contains the definitions of resources
+
+  # Defines the route for connection - When a new client connects to Websocket
+  ConnectRoute:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      Parameters:
+        ApiId: !Ref WebsocketAPI        
+        RouteKey: $connect
+        OperationName: ConnectRoute
+        IntegrationType: AWS_PROXY
+        FunctionArn: !Sub ${WebSocketConnectFunction.Arn}
+      TemplateURL: ./websocket_route.yml
+
+  # Defines the route for disconnection - When any client disconnects from Websocket
+  DisconnectRoute:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      Parameters:
+        ApiId: !Ref WebsocketAPI        
+        RouteKey: $disconnect
+        OperationName: DisconnectRoute
+        IntegrationType: AWS_PROXY
+        FunctionArn: !Sub ${WebSocketDisconnectFunction.Arn}        
+      TemplateURL: ./websocket_route.yml
+
+  # Defines the route for register - When any client connects, need to set an username
+  RegisterRoute:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      Parameters:
+        ApiId: !Ref WebsocketAPI        
+        RouteKey: register
+        OperationName: RegisterRoute
+        IntegrationType: AWS_PROXY
+        FunctionArn: !Sub ${WebSocketRegisterFunction.Arn}        
+      TemplateURL: ./websocket_route.yml 
+
+  # Defines the route for messages - When a client send a message to others
+  MessageRoute:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      Parameters:
+        ApiId: !Ref WebsocketAPI        
+        RouteKey: message
+        OperationName: MessageRoute
+        IntegrationType: AWS_PROXY
+        FunctionArn: !Sub ${WebSocketMessageFunction.Arn}        
+      TemplateURL: ./websocket_route.yml
+
+  # Defines the route for list users - When a client request the list of users connected
+  ListUsersRoute:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      Parameters:
+        ApiId: !Ref WebsocketAPI        
+        RouteKey: list
+        OperationName: ListUsersRoute
+        IntegrationType: AWS_PROXY
+        FunctionArn: !Sub ${WebSocketListUsersFunction.Arn}        
+      TemplateURL: ./websocket_route.yml
+
+  # Defines the default route - When a packet doesn't not match another route
+  DefaultRoute:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      Parameters:
+        ApiId: !Ref WebsocketAPI        
+        RouteKey: $default
+        OperationName: DefaultRoute
+        IntegrationType: MOCK
+        FunctionArn: ""
+      TemplateURL: './websocket_route.yml'     
+
+  # Defines the connect function - Related to Connect Route
+  WebSocketConnectFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: src/
+      Handler: websocket/connect.handler
+      Runtime: python3.8
+      MemorySize: 128
+      Timeout: 100
+      Description: Executes when a new client is connected to WebSocket - Responsible for save Connection ID
+      Policies:
+        # Permission to access DynamoDB Table
+        - DynamoDBCrudPolicy:
+            TableName:
+              Fn::ImportValue: !Sub ${WebSocketTableStackName}:WebSocketConnectionsTableName
+      Environment:        
+        Variables:
+          TABLE_NAME: 
+            Fn::ImportValue: !Sub ${WebSocketTableStackName}:WebSocketConnectionsTableName
+
+  # Defines permission to Websocket API invoke the Lambda Function
+  OnConnectPermission:
+    Type: AWS::Lambda::Permission
+    DependsOn:
+      - WebsocketAPI
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !Ref WebSocketConnectFunction
+      Principal: apigateway.amazonaws.com
+
+  # Defines the disconnect function - Related to Disconnect Route
+  WebSocketDisconnectFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: src/
+      Handler: websocket/disconnect.handler
+      Runtime: python3.8
+      MemorySize: 128
+      Timeout: 100
+      Description: Executes when a new client is disconnected from WebSocket - Responsible for delete Connection ID
+      Policies:
+        # Defines permission to invoke Websocket API from Lambda Function
+        - AmazonAPIGatewayInvokeFullAccess
+        - DynamoDBCrudPolicy:
+            TableName:
+              Fn::ImportValue: !Sub ${WebSocketTableStackName}:WebSocketConnectionsTableName
+      Environment:        
+        Variables:
+          TABLE_NAME: 
+            Fn::ImportValue: !Sub ${WebSocketTableStackName}:WebSocketConnectionsTableName
+          WEBSOCKET_ADDRESS: 
+            Fn::Join: 
+              - '' 
+              - - 'https://'
+                - !Ref WebsocketAPI
+                - '.execute-api.'
+                - !Ref 'AWS::Region'
+                - '.amazonaws.com/'
+                - !Ref 'WebsocketAPIStage'
+      Layers:
+        - !Ref Libs
+
+  OnDisconnectPermission:
+    Type: AWS::Lambda::Permission
+    DependsOn:
+      - WebsocketAPI
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !Ref WebSocketDisconnectFunction
+      Principal: apigateway.amazonaws.com
+
+  WebSocketRegisterFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: src/
+      Handler: websocket/register.handler
+      Runtime: python3.8
+      MemorySize: 128
+      Timeout: 100
+      Description: Executes when a client sents a message to route "register"
+      Policies:
+        - AmazonAPIGatewayInvokeFullAccess
+        - DynamoDBCrudPolicy:
+            TableName:
+              Fn::ImportValue: !Sub ${WebSocketTableStackName}:WebSocketConnectionsTableName
+      Environment:        
+        Variables:
+          TABLE_NAME: 
+            Fn::ImportValue: !Sub ${WebSocketTableStackName}:WebSocketConnectionsTableName
+          WEBSOCKET_ADDRESS: 
+            Fn::Join: 
+              - '' 
+              - - 'https://'
+                - !Ref WebsocketAPI
+                - '.execute-api.'
+                - !Ref 'AWS::Region'
+                - '.amazonaws.com/'
+                - !Ref 'WebsocketAPIStage'
+      Layers:
+        - !Ref Libs
+
+  RegisterPermission:
+    Type: AWS::Lambda::Permission
+    DependsOn:
+      - WebsocketAPI
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !Ref WebSocketRegisterFunction
+      Principal: apigateway.amazonaws.com
+
+  WebSocketMessageFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: src/
+      Handler: websocket/message.handler
+      Runtime: python3.8
+      MemorySize: 128
+      Timeout: 100
+      Description: Executes when a client sents a message to route "message"
+      Policies:
+        - AmazonAPIGatewayInvokeFullAccess
+        - DynamoDBCrudPolicy:
+            TableName:
+              Fn::ImportValue: !Sub ${WebSocketTableStackName}:WebSocketConnectionsTableName
+      Environment:        
+        Variables:
+          TABLE_NAME: 
+            Fn::ImportValue: !Sub ${WebSocketTableStackName}:WebSocketConnectionsTableName
+          WEBSOCKET_ADDRESS: 
+            Fn::Join: 
+              - '' 
+              - - 'https://'
+                - !Ref WebsocketAPI
+                - '.execute-api.'
+                - !Ref 'AWS::Region'
+                - '.amazonaws.com/'
+                - !Ref 'WebsocketAPIStage'
+
+  MessagePermission:
+    Type: AWS::Lambda::Permission
+    DependsOn:
+      - WebsocketAPI
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !Ref WebSocketMessageFunction
+      Principal: apigateway.amazonaws.com
+
+  WebSocketListUsersFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: src/
+      Handler: websocket/list_users.handler
+      Runtime: python3.8
+      MemorySize: 128
+      Timeout: 100
+      Description: Executes when a client sents a message to route "list"
+      Policies:
+        - AmazonAPIGatewayInvokeFullAccess
+        - DynamoDBCrudPolicy:
+            TableName:
+              Fn::ImportValue: !Sub ${WebSocketTableStackName}:WebSocketConnectionsTableName
+      Environment:        
+        Variables:
+          TABLE_NAME: 
+            Fn::ImportValue: !Sub ${WebSocketTableStackName}:WebSocketConnectionsTableName
+          WEBSOCKET_ADDRESS: 
+            Fn::Join: 
+              - '' 
+              - - 'https://'
+                - !Ref WebsocketAPI
+                - '.execute-api.'
+                - !Ref 'AWS::Region'
+                - '.amazonaws.com/'
+                - !Ref 'WebsocketAPIStage'
+      Layers:
+        - !Ref Libs
+
+  ListUsersPermission:
+    Type: AWS::Lambda::Permission
+    DependsOn:
+      - WebsocketAPI
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !Ref WebSocketListUsersFunction
+      Principal: apigateway.amazonaws.com
+
+  # Defines the Layer to use the file scan_table.py as common code to all functions
+  Libs:
+    Type: AWS::Serverless::LayerVersion
+    Properties:
+      LayerName: scan-dynamodb-table
+      Description: Dependency for scan a dynamodb table.
+      ContentUri: src/lib/.
+      CompatibleRuntimes:
+        - python3.8
+
+Outputs:
+  WebsocketAPIConnectionsAddress:
+    Description: Endpoint API
+    Value: 
+      Fn::Join: 
+        - '' 
+        - - 'wss://'
+          - !Ref WebsocketAPI
+          - '.execute-api.'
+          - !Ref 'AWS::Region'
+          - '.amazonaws.com/'
+          - !Ref 'WebsocketAPIStage'
+    Export:
+      Name: !Sub ${AWS::StackName}:endpoint
+
+  WebsocketAPIStage:
+    Description: Stage API
+    Value: !Ref WebsocketAPIStage
+    Export:
+      Name: !Sub ${AWS::StackName}:stage

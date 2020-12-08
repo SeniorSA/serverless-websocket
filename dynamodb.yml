@@ -1,0 +1,42 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: >-
+  AWS Serverless Websocket Sample - DynamoDB Stack
+
+Transform:
+- AWS::Serverless-2016-10-31
+
+Resources:
+  
+  # Table responsible for keep connected users
+  WebSocketConnectionsTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      # On Demand Mode - Scale according requests
+      BillingMode: PAY_PER_REQUEST 
+      # Defines table attributes and types
+      AttributeDefinitions:
+        - AttributeName: connectionId
+          AttributeType: S
+        - AttributeName: userName
+          AttributeType: S
+      # Defines main index (DynamoDB allows only query records by an index)
+      KeySchema: 
+        - AttributeName: connectionId
+          KeyType: HASH
+      # Defines a second index
+      GlobalSecondaryIndexes:
+      - IndexName: user-index
+        KeySchema:
+          - AttributeName: userName
+            KeyType: HASH
+        # Defines that this index can be query all table attributes
+        Projection:
+          ProjectionType: ALL
+      
+Outputs:
+  WebSocketConnectionsTableName:
+    Description: DynamoDB Table name for WebSocket ConnectionsIds
+    Value:
+      Ref: WebSocketConnectionsTable
+    Export:
+      Name: !Sub ${AWS::StackName}:WebSocketConnectionsTableName
