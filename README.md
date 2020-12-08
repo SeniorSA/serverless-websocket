@@ -21,6 +21,8 @@ A arquitetura foi toda provisionada utilizando templates AWS SAM e CloudFormatio
 
 A imagem abaixo demonstra o fluxo do processo.
 
+![Flow](./Serverless_Websocket_Flow.png)
+
 ## Aplicação
 
 A aplicação foi desenvolvida com o framework ReactJS de forma simples, focando em demonstrar o uso da arquitetura do Websocket Serverless.
