@@ -55,7 +55,7 @@ Para subir a arquitetura, vamos utilizar o serviço [AWS SAM](https://aws.amazon
 
 Abra o terminal/console no diretório do repositório clonado.
 
-1. AWS S3
+1. **AWS S3**
 
     O primeiro passo é criar um bucket no serviço [AWS S3](https://docs.aws.amazon.com/pt_br/AmazonS3/latest/dev/Welcome.html). Este bucket será utilizado para armazenar os templates e arquivos locais que são utilizados pelos próximos templates. Como utilizados o conceito de "Nested Stack", precisamos que o template aninhado esteja disponível em um bucket S3.
 
@@ -63,7 +63,7 @@ Abra o terminal/console no diretório do repositório clonado.
 
     Serão solicitadas algumas informações e por fim o nome do bucket criado será apresentado no console. **Guarde esta informação!**
 
-2. AWS DynamoDB
+2. **AWS DynamoDB**
 
     O AWS DynamoDB é utilizado para armazenar as conexões ativas no websocket. Sempre que um usuário é conectado, um registro é inserido em uma tabela do DynamoDB. Assim que o usuário é desconectado este registro é excluído.
 
@@ -71,7 +71,7 @@ Abra o terminal/console no diretório do repositório clonado.
 
     Uma das informações solicitadas será o nome da stack (pilha) que será criada. **Guarde esta informação, pois será utilizada futuramente!**
 
-3. AWS API Gateway e AWS Lambda Functions
+3. **AWS API Gateway e AWS Lambda Functions**
 
     Nesta etapa, o mesmo template é utilizado para criar a API Websocket e também para criar as funções Lambda que são responsáveis pelas interações com o websocket.
 
