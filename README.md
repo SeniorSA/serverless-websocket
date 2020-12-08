@@ -38,49 +38,56 @@ As mensagens recebidas e enviadas serão listadas na parte principal da tela. Lo
 
 Faça clone deste repositório para sua máquina local.
 
+Para execução do projeto, é necessário subir a arquitetura na AWS, conforme os passos a seguir. Além disso, são necessários os requisitos:
+
+### Pré-requisitos
+
+- AWS SAM
+   - Acessar a [documentação](https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/serverless-sam-cli-install.html) e instalar o cliente (CLI)
+- NodeJS
+   - Instalar (caso ainda não tenha) o aplicativo NodeJS mais recente, disponível em https://nodejs.org.
+
 ### Arquitetura
 
-Para reproduzir este projeto é precisamos subir a arquitetura na AWS. Os templates são descritos abaixo e devem ser carregados em ordem.
+Para reproduzir este projeto precisamos subir a arquitetura na AWS. Os templates são descritos abaixo e devem ser carregados em ordem.
 
-Para subir a arquitetura, vamos utilizar o serviço [AWS SAM](https://aws.amazon.com/pt/serverless/sam/), para isso acesse a [documentação](https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/serverless-sam-cli-install.html) e instale o cliente (CLI).
+Para subir a arquitetura, vamos utilizar o serviço [AWS SAM](https://aws.amazon.com/pt/serverless/sam/). Instalar conforme pré-requisito.
 
-Após instalado, abra o terminal/console no diretório do repositório clonado.
+Abra o terminal/console no diretório do repositório clonado.
 
-#### AWS S3
+1. AWS S3
 
-O primeiro passo é criar um bucket no serviço [AWS S3](https://docs.aws.amazon.com/pt_br/AmazonS3/latest/dev/Welcome.html). Este bucket será utilizado para armazenar os templates e arquivos locais que são utilizados pelos próximos templates. Como utilizados o conceito de "Nested Stack", precisamos que o template aninhado esteja disponível em um bucket S3.
+    O primeiro passo é criar um bucket no serviço [AWS S3](https://docs.aws.amazon.com/pt_br/AmazonS3/latest/dev/Welcome.html). Este bucket será utilizado para armazenar os templates e arquivos locais que são utilizados pelos próximos templates. Como utilizados o conceito de "Nested Stack", precisamos que o template aninhado esteja disponível em um bucket S3.
 
-Execute o comando: `sam deploy --guided -t s3.yml`
+    Execute o comando: `sam deploy --guided -t s3.yml`
 
-Serão solicitadas algumas informações e por fim o nome do bucket criado será apresentado no console. **Guarde esta informação!**
+    Serão solicitadas algumas informações e por fim o nome do bucket criado será apresentado no console. **Guarde esta informação!**
 
-#### AWS DynamoDB
+2. AWS DynamoDB
 
-O AWS DynamoDB é utilizado para armazenar as conexões ativas no websocket. Sempre que um usuário é conectado, um registro é inserido em uma tabela do DynamoDB. Assim que o usuário é desconectado este registro é excluído.
+    O AWS DynamoDB é utilizado para armazenar as conexões ativas no websocket. Sempre que um usuário é conectado, um registro é inserido em uma tabela do DynamoDB. Assim que o usuário é desconectado este registro é excluído.
 
-Execute o comando: `sam deploy --guided -t dynamodb.yml`
+    Execute o comando: `sam deploy --guided -t dynamodb.yml`
 
-Uma das informações solicitadas será o nome da stack (pilha) que será criada. **Guarde esta informação, pois será utilizada futuramente!**
+    Uma das informações solicitadas será o nome da stack (pilha) que será criada. **Guarde esta informação, pois será utilizada futuramente!**
 
-#### AWS API Gateway e AWS Lambda Functions
+3. AWS API Gateway e AWS Lambda Functions
 
-Nesta etapa, o mesmo template é utilizado para criar a API Websocket e também para criar as funções Lambda que são responsáveis pelas interações com o websocket.
+    Nesta etapa, o mesmo template é utilizado para criar a API Websocket e também para criar as funções Lambda que são responsáveis pelas interações com o websocket.
 
-Aqui precisamos de dois comandos para execução e vamos utilizar as informações que guardamos anteriormente.
+    Aqui precisamos de dois comandos para execução e vamos utilizar as informações que guardamos anteriormente.
 
-Primeiro comando: `sam package -t websocket.yml --s3-bucket "Informe o nome do bucket S3 aqui" --output-template --websocket_package.yml`
+    Primeiro comando: `sam package -t websocket.yml --s3-bucket "Informe o nome do bucket S3 aqui" --output-template --websocket_package.yml`
 
-Após a execução deste comando, será criado o arquivo `websocket_package.yml`. Este arquivo possui o mesmo conteúdo que o original `websocket.yml`, porém, substitui os arquivos locais por arquivos armazenados no bucket S3 informado. Além disso, este é o arquivo utilizado para subir a arquitetura desta etapa.
+    Após a execução deste comando, será criado o arquivo `websocket_package.yml`. Este arquivo possui o mesmo conteúdo que o original `websocket.yml`, porém, substitui os arquivos locais por arquivos armazenados no bucket S3 informado. Além disso, este é o arquivo utilizado para subir a arquitetura desta etapa.
 
-Segundo comando: `sam deploy -t websocket_package.yml --capabilities CAPABILITY_AUTO_EXPAND CAPABILITY_IAM`
+    Segundo comando: `sam deploy -t websocket_package.yml --capabilities CAPABILITY_AUTO_EXPAND CAPABILITY_IAM`
 
-Depois da execução do segundo comando, uma das informações solicitadas será o nome da stack responsável pela tabela DynamoDB (WebSocketTableStackName). Este parâmetro deve ser preenchido com a segunda informação que foi guardada, no passo do AWS DynamoDB. 
+    Depois da execução do segundo comando, uma das informações solicitadas será o nome da stack responsável pela tabela DynamoDB (WebSocketTableStackName). Este parâmetro deve ser preenchido com a segunda informação que foi guardada, no passo do AWS DynamoDB. 
 
-Ao final do processo, será apresentado o endereço do Websocket, algo parecido com `wss://WEBSOCKET.execute-api.REGIAO.amazonaws.com/Prod`. **Guarde esta informação, será usada posteriormente**.
+    Ao final do processo, será apresentado o endereço do Websocket, algo parecido com `wss://WEBSOCKET.execute-api.REGIAO.amazonaws.com/Prod`. **Guarde esta informação, será usada posteriormente**.
 
 ### Aplicação
-
-Para execução da aplicação do Webchat, instale (caso ainda não tenha) o aplicativo NodeJS mais recente, disponível em https://nodejs.org.
 
 Abra o arquivo `config.js` que está em `webchat/src/` com o editor de sua preferência e altere o valor da variável `websocketAddress` informando o endereço de websocket obtido no passo anterior.
 
