@@ -77,7 +77,7 @@ Abra o terminal/console no diretório do repositório clonado.
 
     Aqui precisamos de dois comandos para execução e vamos utilizar as informações que guardamos anteriormente.
 
-    Primeiro comando: `sam package -t websocket.yml --s3-bucket "Informe o nome do bucket S3 aqui" --output-template --websocket_package.yml`
+    Primeiro comando: `sam package -t websocket.yml --s3-bucket "Informe o nome do bucket S3 aqui" --output-template-file websocket_package.yml`
 
     Após a execução deste comando, será criado o arquivo `websocket_package.yml`. Este arquivo possui o mesmo conteúdo que o original `websocket.yml`, porém, substitui os arquivos locais por arquivos armazenados no bucket S3 informado. Além disso, este é o arquivo utilizado para subir a arquitetura desta etapa.
 
