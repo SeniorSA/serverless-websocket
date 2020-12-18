@@ -81,7 +81,7 @@ Abra o terminal/console no diretório do repositório clonado.
 
     Após a execução deste comando, será criado o arquivo `websocket_package.yml`. Este arquivo possui o mesmo conteúdo que o original `websocket.yml`, porém, substitui os arquivos locais por arquivos armazenados no bucket S3 informado. Além disso, este é o arquivo utilizado para subir a arquitetura desta etapa.
 
-    Segundo comando: `sam deploy -t websocket_package.yml --capabilities CAPABILITY_AUTO_EXPAND CAPABILITY_IAM`
+    Segundo comando: `sam deploy --guided -t websocket_package.yml --capabilities CAPABILITY_AUTO_EXPAND CAPABILITY_IAM`
 
     Depois da execução do segundo comando, uma das informações solicitadas será o nome da stack responsável pela tabela DynamoDB (WebSocketTableStackName). Este parâmetro deve ser preenchido com a segunda informação que foi guardada, no passo do AWS DynamoDB. 
 
